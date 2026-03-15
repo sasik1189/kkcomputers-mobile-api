@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { UserModel, User } from '../../endpoint/models/user.row.model';
+import { UserModel } from '../../endpoint/models/user.row.model';
 import jwt from 'jsonwebtoken';
 import config from '../../env_variables_config/config';
 import bcrypt from 'bcrypt';
@@ -64,13 +64,22 @@ export const getUser = async (
   next: NextFunction
 ) => {
   try {
-    const user = await userModel.getUser(req.params.id as unknown as number);
+    const user = await userModel.getUser(req.body.userId as unknown as string);
+    if (user == null) {
+      return res.status(404).json({
+        message: 'User token not found',
+      });
+    }
     res.json({
       data: user,
       message: 'done.. user recieved',
     });
   } catch (error) {
-    next(error);
+    console.log(error);
+    res.status(500);
+    res.json({
+      message: String(error),
+    });
   }
 };
 
@@ -102,7 +111,6 @@ export const authenticate = async (
       req.body.identifier,
       req.body.password
     );
-    const token = jwt.sign({ user }, `${config.tokenSecret}`);
     if (!user) {
       return res.status(401).json({
         message: ['Email or mobile not not found. Please signup'],
@@ -119,6 +127,14 @@ export const authenticate = async (
         user.password
       )
     ) {
+      delete user.password;
+      const time = new Date();
+      const token = jwt.sign(
+        { user, time: time.toISOString() },
+        `${config.tokenSecret}`
+      );
+
+      await userModel.saveLoginToken(user.userId, token);
       return res.json({
         data: {
           userId: user.userId,
@@ -134,6 +150,7 @@ export const authenticate = async (
       });
     }
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       message: String(error),
     });

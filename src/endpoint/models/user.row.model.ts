@@ -7,7 +7,7 @@ import { nanoid } from 'nanoid';
 //define the Typescript type for user table
 export type User = {
   id: number;
-  userId: number;
+  userId: string;
   name: string;
   email: string;
   mobile: string;
@@ -16,10 +16,12 @@ export type User = {
   token: string;
 };
 
-type LoggedInUser = {
-  userId: number;
+export type LoginUser = {
+  userId: string;
   name: string;
   shopName: string;
+  email?: string;
+  mobile?: string;
   password?: string;
 };
 
@@ -114,18 +116,30 @@ export class UserModel {
     }
   }
   //get specific user
-  async getUser(id: number): Promise<User> {
+  async getUser(userId: string): Promise<LoginUser | null> {
     try {
       //open connection with database
       const connection = await client.connect();
-      const sql = `SELECT id, first_name, last_name FROM users WHERE id= $1`;
+      const sql = `SELECT name, mobile, email, shop_name FROM users WHERE user_id = $1`;
       //run query
-      const result = await connection.query(sql, [id]);
+      const result = await connection.query(sql, [userId]);
+
       //release connection
       connection.release();
-      return result.rows[0];
+      if (result.rowCount > 0) {
+        const resultUser = result.rows[0];
+        return {
+          name: resultUser.name,
+          userId: resultUser.user_id,
+          shopName: resultUser.shop_name,
+          email: resultUser.email,
+          mobile: resultUser.mobile,
+        };
+      } else {
+        return null;
+      }
     } catch (error) {
-      throw new Error(`Sorry unable to  user ${id}.Error: ${error}`);
+      throw new Error(`Sorry unable to user ${userId}.Error: ${error}`);
     }
   }
   //delete a user
@@ -147,7 +161,7 @@ export class UserModel {
   async authenticate(
     identifier: string,
     password: string
-  ): Promise<LoggedInUser | null> {
+  ): Promise<LoginUser | null> {
     try {
       const connection = await client.connect();
       const sql =
@@ -168,6 +182,38 @@ export class UserModel {
       return null;
     } catch (error) {
       throw new Error(`Login Error: ${error}`);
+    }
+  }
+
+  async saveLoginToken(userId: string, token: string): Promise<null> {
+    try {
+      const connection = await client.connect();
+      const sql =
+        'INSERT INTO users_token ( user_id, token, created_at) VALUES ($1, $2, now())';
+
+      await connection.query(sql, [userId, token]);
+
+      connection.release();
+      return null;
+    } catch (error) {
+      throw new Error(`Login save token Error: ${error}`);
+    }
+  }
+
+  async getUserToken(token: string): Promise<User | null> {
+    try {
+      //open connection with database
+      const connection = await client.connect();
+      const sql = `SELECT user_id FROM users_token WHERE token = $1`;
+      //run query
+      const result = await connection.query(sql, [token]);
+      //release connection
+      connection.release();
+      return result.rows.length ? result.rows[0].user_id : null;
+    } catch (error) {
+      throw new Error(
+        `Sorry unable to get user token ${token}. Error: ${error}`
+      );
     }
   }
 }

@@ -12,9 +12,9 @@ const usersRoutes = Router();
 //Once you create a new user, Store the token & use it for future HTTP requests
 usersRoutes.post('/signup', validateRegistration, controllers.create);
 //to index all users, token required
-usersRoutes.get('/', verifyAuthToken, controllers.getAllUsers);
+// usersRoutes.get('/', verifyAuthToken, controllers.getAllUsers);
 //to show a sepecific user, token required
-usersRoutes.get('/:id', verifyAuthToken, controllers.getUser);
+usersRoutes.get('/profile', verifyAuthToken, controllers.getUser);
 //Authenticate user (login)
 usersRoutes.post('/login', validateLogin, controllers.authenticate);
 //to delete a sepecific user, token required
