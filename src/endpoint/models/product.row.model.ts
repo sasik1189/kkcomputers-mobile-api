@@ -3,9 +3,23 @@ import client from '../database_connect';
 /* CRUD actions for the Prodect table */
 //define the Typescript type for user table
 export type Product = {
-  id: number;
+  productId: string;
   name: string;
-  price: number;
+  price?: number;
+  categoryId: string;
+  compatibleId: string;
+  compatibleName: string;
+};
+
+export type CompatibleProduct = {
+  categoryId: string;
+  compatibleId: string;
+  compatibleName: string;
+};
+
+export type CompatibleProductObj = {
+  category: string;
+  list: Array<CompatibleProduct>;
 };
 
 //This class is going to be the representation of the database (postgres ambassador in js)
@@ -35,7 +49,7 @@ export class ProductModel {
     try {
       //open connection with database
       const connection = await client.connect();
-      const sql = `SELECT * FROM products`;
+      const sql = `SELECT product_id "productId", name FROM products order by name asc`;
       //run query
       const result = await connection.query(sql);
       //release connection
@@ -47,16 +61,22 @@ export class ProductModel {
     }
   }
   //get specific product
-  async getProduct(id: number): Promise<Product> {
+  async getCompatibleProducts(id: string): Promise<CompatibleProduct[]> {
     try {
       //open connection with database
       const connection = await client.connect();
-      const sql = `SELECT * FROM products WHERE id= $1`;
+      const sql = `(select cp.compatible_id "compatibleId", p.name "compatibleName", cp.category_id "categoryId" from compatible_products cp 
+        JOIN products p on cp.compatible_id = p.product_id
+        where cp.product_id = $1)
+        UNION
+        (select cp.product_id "compatibleId", p.name "compatibleName", cp.category_id "categoryId" from compatible_products cp 
+        JOIN products p on cp.product_id = p.product_id
+        where cp.compatible_id = $1)`;
       //run query
       const result = await connection.query(sql, [id]);
       //release connection
       connection.release();
-      return result.rows[0];
+      return result.rows;
     } catch (error) {
       throw new Error(`Sorry unable to  product ${id}.Error: ${error}`);
     }

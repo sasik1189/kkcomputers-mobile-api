@@ -23,15 +23,15 @@ describe('Product Model', () => {
   });
   it('getAllProducts method should return a list of all users', async () => {
     const result = await product.getAllProducts();
-    expect(result[0].id).toBe(1);
+    expect(result[0].productId).toBe('abc');
   });
 
   //Test get a specific product method
   it('should have a getProduct method', () => {
-    expect(product.getProduct).toBeDefined();
+    expect(product.getCompatibleProducts).toBeDefined();
   });
   it('getProduct method should return a specific product by its id', async () => {
-    const result = await product.getProduct(1);
-    expect(result?.name).toBe('dress');
+    const result = await product.getCompatibleProducts('abc');
+    expect(result?.[0].compatibleName).toBe('dress');
   });
 });

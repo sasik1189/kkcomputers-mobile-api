@@ -34,26 +34,40 @@ export const getAllProducts = async (
       message: 'done.. recieved all products',
     });
   } catch (error) {
-    next(error);
+    console.log(error);
+    return res.status(500).json({
+      message: String(error),
+    });
   }
 };
 
 //select specific product
-export const getProduct = async (
+export const getCompatibleProducts = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const product = await productModel.getProduct(
-      req.params.id as unknown as number
+    const products = await productModel.getCompatibleProducts(
+      req.params.id as unknown as string
     );
+    const compatibleProducts = products.reduce((acc, item) => {
+      const key = item.categoryId;
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      acc[key].push(item);
+      return acc;
+    }, {} as Record<string, typeof products>);
     res.json({
-      data: product,
+      data: compatibleProducts,
       message: 'done.. product recieved',
     });
   } catch (error) {
-    next(error);
+    console.log(error);
+    return res.status(500).json({
+      message: String(error),
+    });
   }
 };
 

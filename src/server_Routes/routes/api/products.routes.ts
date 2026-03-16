@@ -6,9 +6,13 @@ import { verifyAuthToken } from '../../../middleware/authToken';
 const productsRoutes = Router();
 
 //to create a new product, token required
-productsRoutes.post('/', verifyAuthToken, controllers.create);
-productsRoutes.get('/', controllers.getAllProducts);
-productsRoutes.get('/:id', controllers.getProduct);
+// productsRoutes.post('/', verifyAuthToken, controllers.create);
+productsRoutes.get('/', verifyAuthToken, controllers.getAllProducts);
+productsRoutes.get(
+  '/compatibles/:id',
+  verifyAuthToken,
+  controllers.getCompatibleProducts
+);
 productsRoutes.delete('/:id', controllers.deleteProduct);
 
 export default productsRoutes;
