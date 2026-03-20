@@ -23,3 +23,24 @@ export const getActiveSubscriptions = async (
     });
   }
 };
+
+export const getUserActiveSubscription = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const subscriptions = await subscriptionModel.getUserActiveSubscription(
+      req.body.userId as unknown as string
+    );
+    res.json({
+      data: subscriptions,
+      message: 'Done.. active subscriptions retrieved',
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: String(error),
+    });
+  }
+};

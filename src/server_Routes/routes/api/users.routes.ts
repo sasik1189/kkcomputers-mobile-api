@@ -5,19 +5,36 @@ import {
   validateRegistration,
   validateLogin,
 } from '../../../middleware/validation';
+import rateLimit from 'express-rate-limit';
+
+const loginSignupLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  limit: 5, // Only 5 failed attempts per hour
+  message: 'Too many login attempts, please try again in an hour.',
+});
 
 //invoke fn Router
 const usersRoutes = Router();
 
 //Once you create a new user, Store the token & use it for future HTTP requests
-usersRoutes.post('/signup', validateRegistration, controllers.create);
+usersRoutes.post(
+  '/signup',
+  loginSignupLimiter,
+  validateRegistration,
+  controllers.create
+);
 //to index all users, token required
 // usersRoutes.get('/', verifyAuthToken, controllers.getAllUsers);
 //to show a sepecific user, token required
 usersRoutes.get('/profile', verifyAuthToken, controllers.getUser);
 //Authenticate user (login)
-usersRoutes.post('/login', validateLogin, controllers.authenticate);
+usersRoutes.post(
+  '/login',
+  loginSignupLimiter,
+  validateLogin,
+  controllers.authenticate
+);
 //to delete a sepecific user, token required
-usersRoutes.delete('/:id', verifyAuthToken, controllers.deleteUser);
+// usersRoutes.delete('/:id', verifyAuthToken, controllers.deleteUser);
 
 export default usersRoutes;

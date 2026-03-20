@@ -8,6 +8,7 @@ CREATE TABLE products(
     id SERIAL,
     product_id VARCHAR NOT NULL UNIQUE PRIMARY KEY,
     name VARCHAR NOT NULL,
+    type varchar,
     price NUMERIC
 );
 
@@ -26,6 +27,15 @@ CREATE TABLE subscriptions(
     subscription_id VARCHAR NOT NULL UNIQUE PRIMARY KEY,
     name VARCHAR NOT NULL,
     price NUMERIC,
+    valid_days int,
     is_active Boolean default false,
     sort int
+);
+
+CREATE TABLE user_subscriptions(
+    id SERIAL,
+    user_id VARCHAR REFERENCES users(user_id),
+    subscription_id VARCHAR REFERENCES subscriptions(subscription_id),
+    created_at timestamp,
+    valid_till timestamp
 );

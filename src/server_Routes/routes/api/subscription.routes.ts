@@ -12,4 +12,10 @@ subscriptionRoutes.get(
   controllers.getActiveSubscriptions
 );
 
+subscriptionRoutes.get(
+  '/user',
+  verifyAuthToken,
+  controllers.getUserActiveSubscription
+);
+
 export default subscriptionRoutes;

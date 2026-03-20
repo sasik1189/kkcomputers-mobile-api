@@ -1,5 +1,6 @@
 /* Express to run server and routes */
 import express, { Request, Response } from 'express';
+import { rateLimit } from 'express-rate-limit';
 import morgan from 'morgan';
 //Helmet to secure my express
 import helmet from 'helmet';
@@ -12,7 +13,13 @@ import cors from 'cors';
 
 /* Strartup an instance of the app */
 const app: express.Application = express();
-
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 100, // Limit each IP to 100 requests per `window`
+  standardHeaders: 'draft-7', // set `RateLimit` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  message: 'Too many requests, please try again later.',
+});
 /* Middleware*/
 //HTTP request logger middleware
 app.use(morgan('common'));
@@ -22,6 +29,8 @@ app.use(helmet());
 app.use(bodyParser.json());
 
 app.use(cors());
+
+app.use(limiter);
 
 /* Setup server */
 const port = config.port || 1999;

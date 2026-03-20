@@ -31,4 +31,52 @@ export class SubscriptionModel {
       throw new Error(`${err}`);
     }
   }
+
+  async getUserActiveSubscription(
+    userId: string
+  ): Promise<Subscription[] | null> {
+    try {
+      const sql = `SELECT s.subscription_id, s.name, s.price FROM users u
+        JOIN user_subscriptions us ON u.user_id = us.user_id 
+        JOIN subscriptions s ON us.subscription_id = s.subscription_id 
+        WHERE u.user_id = $1 and us.valid_till <= now()`;
+      const connection = await client.connect();
+
+      const result = await connection.query(sql, [userId]);
+      connection.release();
+      if (result.rows.length) {
+        return result.rows.map((r) => {
+          return {
+            subscriptionId: r.subscription_id,
+            name: r.name,
+            price: Number(r.price).toFixed(2),
+          };
+        });
+      } else {
+        return [
+          {
+            subscriptionId: '',
+            name: 'Free User',
+            price: '0.00',
+          },
+        ];
+      }
+    } catch (err) {
+      throw new Error(`${err}`);
+    }
+  }
+
+  // verifySubscription
+  async verifySubscription(userId: string): Promise<boolean> {
+    try {
+      const sql = `SELECT user_id FROM user_subscriptions WHERE user_id = $1 and valid_till <= now()`;
+      const connection = await client.connect();
+
+      const result = await connection.query(sql, [userId]);
+      connection.release();
+      return result.rows.length > 0;
+    } catch (err) {
+      throw new Error(`${err}`);
+    }
+  }
 }

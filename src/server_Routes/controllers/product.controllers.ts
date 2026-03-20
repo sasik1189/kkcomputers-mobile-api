@@ -28,7 +28,9 @@ export const getAllProducts = async (
   next: NextFunction
 ) => {
   try {
-    const product = await productModel.getAllProducts();
+    const product = await productModel.getAllProducts(
+      req.params.type as unknown as string
+    );
     res.json({
       data: product,
       message: 'done.. recieved all products',

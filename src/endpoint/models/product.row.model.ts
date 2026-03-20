@@ -45,13 +45,13 @@ export class ProductModel {
     }
   }
   //get all products
-  async getAllProducts(): Promise<Product[]> {
+  async getAllProducts(type: string): Promise<Product[]> {
     try {
       //open connection with database
       const connection = await client.connect();
-      const sql = `SELECT product_id "productId", name FROM products order by name asc`;
+      const sql = `SELECT product_id "productId", name FROM products WHERE type = $1 order by name asc`;
       //run query
-      const result = await connection.query(sql);
+      const result = await connection.query(sql, [type]);
       //release connection
       connection.release();
       //return all products
