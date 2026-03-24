@@ -36,6 +36,7 @@ CREATE TABLE user_subscriptions(
     id SERIAL,
     user_id VARCHAR REFERENCES users(user_id),
     subscription_id VARCHAR REFERENCES subscriptions(subscription_id),
+    order_id VARCHAR REFERENCES orders(order_id),
     created_at timestamp,
     valid_till timestamp
 );

@@ -6,6 +6,7 @@ export type Subscription = {
   subscriptionId: string;
   name: string;
   price: string;
+  paymentPrice: number;
 };
 
 export class SubscriptionModel {
@@ -22,6 +23,7 @@ export class SubscriptionModel {
             subscriptionId: r.subscription_id,
             name: r.name,
             price: Number(r.price).toFixed(2),
+            paymentPrice: Number(r.price) * 100,
           };
         });
       }
@@ -39,7 +41,7 @@ export class SubscriptionModel {
       const sql = `SELECT s.subscription_id, s.name, s.price FROM users u
         JOIN user_subscriptions us ON u.user_id = us.user_id 
         JOIN subscriptions s ON us.subscription_id = s.subscription_id 
-        WHERE u.user_id = $1 and us.valid_till <= now()`;
+        WHERE u.user_id = $1 and CURRENT_DATE <= date(us.valid_till)`;
       const connection = await client.connect();
 
       const result = await connection.query(sql, [userId]);
@@ -50,6 +52,7 @@ export class SubscriptionModel {
             subscriptionId: r.subscription_id,
             name: r.name,
             price: Number(r.price).toFixed(2),
+            paymentPrice: Number(r.price) * 100,
           };
         });
       } else {
@@ -58,6 +61,7 @@ export class SubscriptionModel {
             subscriptionId: '',
             name: 'Free User',
             price: '0.00',
+            paymentPrice: 100,
           },
         ];
       }
@@ -69,7 +73,7 @@ export class SubscriptionModel {
   // verifySubscription
   async verifySubscription(userId: string): Promise<boolean> {
     try {
-      const sql = `SELECT user_id FROM user_subscriptions WHERE user_id = $1 and valid_till <= now()`;
+      const sql = `SELECT user_id FROM user_subscriptions WHERE user_id = $1 and CURRENT_DATE <= date(valid_till)`;
       const connection = await client.connect();
 
       const result = await connection.query(sql, [userId]);

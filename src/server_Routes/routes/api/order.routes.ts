@@ -6,11 +6,17 @@ import { verifyAuthToken } from '../../../middleware/authToken';
 const ordersRoutes = Router();
 
 //create a new order
-ordersRoutes.post('/', controllers.create);
+ordersRoutes.post('/new', verifyAuthToken, controllers.create);
+//update success order
+ordersRoutes.post('/success', verifyAuthToken, controllers.success);
 //Add orders to a spesific product or add  products to a spesific order
 ordersRoutes.post('/:id/products', controllers.addProduct);
 //Get the current order by the user, token required
-ordersRoutes.get('/current', verifyAuthToken, controllers.getCurrentOrderByUser);
+ordersRoutes.get(
+  '/current',
+  verifyAuthToken,
+  controllers.getCurrentOrderByUser
+);
 //Get completed orders by the user
 ordersRoutes.get('/completed', controllers.completedOrdersByUser);
 

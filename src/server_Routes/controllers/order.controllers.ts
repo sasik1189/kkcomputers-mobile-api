@@ -1,8 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
 import { OrderModel } from '../../endpoint/models/order.row.model';
+const Razorpay = require('razorpay');
 
 //instance from the OrderModel class
 const orderModel = new OrderModel();
+
+const razorpayInstance = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
 
 //create an order
 export const create = async (
@@ -11,13 +17,43 @@ export const create = async (
   next: NextFunction
 ) => {
   try {
-    const order = await orderModel.create(req.body);
+    const razorpayRes = await razorpayInstance.orders.create({
+      amount: req.body.price,
+      currency: "INR",
+      receipt: req.body.subscriptionId,
+      notes: {
+        userId: req.body.userId
+      }
+    });
+
+    const order = await orderModel.create(razorpayRes.id, req.body);
     res.json({
-      data: { order },
+      data: order,
       message: 'Done.. order created',
     });
   } catch (error) {
-    next(error);
+    console.log(error);
+    return res.status(500).json({
+      message: String(error),
+    });
+  }
+};
+
+export const success = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    await orderModel.success(req.body);
+    res.json({
+      message: 'Done.. order updated',
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: String(error),
+    });
   }
 };
 

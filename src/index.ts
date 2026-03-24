@@ -19,7 +19,9 @@ const limiter = rateLimit({
   standardHeaders: 'draft-7', // set `RateLimit` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
   message: 'Too many requests, please try again later.',
+  validate: { xForwardedForHeader: false },
 });
+app.set('trust proxy', true);
 /* Middleware*/
 //HTTP request logger middleware
 app.use(morgan('common'));
