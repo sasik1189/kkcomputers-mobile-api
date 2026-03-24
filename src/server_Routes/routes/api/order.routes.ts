@@ -9,6 +9,8 @@ const ordersRoutes = Router();
 ordersRoutes.post('/new', verifyAuthToken, controllers.create);
 //update success order
 ordersRoutes.post('/success', verifyAuthToken, controllers.success);
+//update success order
+ordersRoutes.post('/failure', verifyAuthToken, controllers.failure);
 //Add orders to a spesific product or add  products to a spesific order
 ordersRoutes.post('/:id/products', controllers.addProduct);
 //Get the current order by the user, token required

@@ -38,7 +38,7 @@ export class SubscriptionModel {
     userId: string
   ): Promise<Subscription[] | null> {
     try {
-      const sql = `SELECT s.subscription_id, s.name, s.price FROM users u
+      const sql = `SELECT s.subscription_id, s.name, s.price, us.valid_till FROM users u
         JOIN user_subscriptions us ON u.user_id = us.user_id 
         JOIN subscriptions s ON us.subscription_id = s.subscription_id 
         WHERE u.user_id = $1 and CURRENT_DATE <= date(us.valid_till)`;
@@ -48,11 +48,16 @@ export class SubscriptionModel {
       connection.release();
       if (result.rows.length) {
         return result.rows.map((r) => {
+          const validTill = new Date(r.valid_till);
+
           return {
             subscriptionId: r.subscription_id,
             name: r.name,
             price: Number(r.price).toFixed(2),
             paymentPrice: Number(r.price) * 100,
+            validTill: `${validTill.getDay()}/${
+              validTill.getMonth() + 1
+            }/${validTill.getFullYear()}`,
           };
         });
       } else {

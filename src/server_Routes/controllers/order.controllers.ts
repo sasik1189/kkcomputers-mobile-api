@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { OrderModel } from '../../endpoint/models/order.row.model';
-const Razorpay = require('razorpay');
+import { createHmac } from 'crypto';
+import Razorpay from 'razorpay';
 
 //instance from the OrderModel class
 const orderModel = new OrderModel();
@@ -45,9 +46,39 @@ export const success = async (
   next: NextFunction
 ) => {
   try {
-    await orderModel.success(req.body);
+    const generatedSignature = createHmac('sha256', process.env.RAZORPAY_KEY_SECRET || '')
+      .update(req.body.razorpayOrderId + "|" + req.body.paymentId)
+      .digest('hex');
+
+    if (generatedSignature == req.body.signature) {
+      await orderModel.success(req.body);
+      res.json({
+        message: 'Done.. success order updated',
+      });
+
+    } else {
+      res.status(401);
+      res.json({
+        message: 'Invalid Payment',
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: String(error),
+    });
+  }
+};
+
+export const failure = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    await orderModel.failure(req.body);
     res.json({
-      message: 'Done.. order updated',
+      message: 'Done.. failed order updated',
     });
   } catch (error) {
     console.log(error);

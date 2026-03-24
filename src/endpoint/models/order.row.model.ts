@@ -16,6 +16,11 @@ type SuccessOrder = {
   signature: string;
 };
 
+type FailureOrder = {
+  orderId: string;
+  message: string;
+};
+
 type CreatedOrder = {
   orderId: string;
   razorpayId: string;
@@ -84,7 +89,7 @@ export class OrderModel {
           const subSql = `SELECT subscription_id, valid_days FROM subscriptions WHERE subscription_id=$1`;
           const subResult = await connection.query(subSql, [subscriptionId]);
           if (subResult.rows.length) {
-            const subscriptionDays:number = subResult.rows[0]['valid_days'];
+            const subscriptionDays: number = subResult.rows[0]['valid_days'];
             const insertSql = `INSERT INTO user_subscriptions (user_id, subscription_id, order_id, created_at, valid_till) VALUES 
                   ($1, $2, $3, now(), CURRENT_DATE + ($4 || ' days')::interval)`;
             //run query
@@ -112,6 +117,32 @@ export class OrderModel {
     } catch (error) {
       throw new Error(
         `Sorry unable to update the success order.Error: ${error}`
+      );
+    }
+  }
+
+  async failure(o: FailureOrder): Promise<null> {
+    try {
+      //open connection with database
+
+      const connection = await client.connect();
+      const sql = `UPDATE orders set message = $2, status = $3, payment_received_at = now()
+          where order_id = $1`;
+      //run query
+      await connection.query(sql, [
+        o.orderId,
+        o.message,
+        'FAILED',
+      ]);
+
+      //release connection
+      connection.release();
+
+      //return created ORDER
+      return null;
+    } catch (error) {
+      throw new Error(
+        `Sorry unable to update the failed order. Error: ${error}`
       );
     }
   }
