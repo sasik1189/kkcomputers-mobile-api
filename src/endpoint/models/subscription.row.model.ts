@@ -49,15 +49,18 @@ export class SubscriptionModel {
       if (result.rows.length) {
         return result.rows.map((r) => {
           const validTill = new Date(r.valid_till);
-
+          const date =
+            validTill.getDate() < 10
+              ? `0${validTill.getDate()}`
+              : `${validTill.getDate()}`;
+          const month = validTill.getMonth() + 1;
+          const monthPad = month < 10 ? `0${month}` : `${month}`;
           return {
             subscriptionId: r.subscription_id,
             name: r.name,
             price: Number(r.price).toFixed(2),
             paymentPrice: Number(r.price) * 100,
-            validTill: `${validTill.getDay()}/${
-              validTill.getMonth() + 1
-            }/${validTill.getFullYear()}`,
+            validTill: `${date}/${monthPad}/${validTill.getFullYear()}`,
           };
         });
       } else {
