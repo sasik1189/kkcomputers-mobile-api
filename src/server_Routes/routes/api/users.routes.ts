@@ -4,6 +4,7 @@ import { verifyAuthToken } from '../../../middleware/authToken';
 import {
   validateRegistration,
   validateLogin,
+  validateMobile,
 } from '../../../middleware/validation';
 import rateLimit from 'express-rate-limit';
 
@@ -15,6 +16,13 @@ const loginSignupLimiter = rateLimit({
 
 //invoke fn Router
 const usersRoutes = Router();
+
+usersRoutes.post(
+  '/verify_mobile',
+  loginSignupLimiter,
+  validateMobile,
+  controllers.verifyMobile
+);
 
 //Once you create a new user, Store the token & use it for future HTTP requests
 usersRoutes.post(

@@ -1,18 +1,30 @@
 import { Request, Response, NextFunction } from 'express';
 import Joi from 'joi';
 
+interface VerifyMobile {
+  mobile: string;
+}
+
 interface UserRegistration {
   name: string;
   mobile: string;
   email: string;
   password: string;
   shopName: string;
+  otp: string;
 }
 
 interface UserLogin {
   identifier: string;
   password: string;
 }
+
+const verifyMobileSchema = Joi.object<VerifyMobile>({
+  mobile: Joi.string()
+    .pattern(/^[0-9]{10}$/) // Adjust regex based on your country's format
+    .required()
+    .messages({ 'string.pattern.base': 'Mobile must be a valid phone number' }),
+});
 
 const registrationSchema = Joi.object<UserRegistration>({
   name: Joi.string()
@@ -32,6 +44,11 @@ const registrationSchema = Joi.object<UserRegistration>({
   password: Joi.string().min(6).required(),
 
   shopName: Joi.string().min(2).required(),
+
+  otp: Joi.string()
+    .pattern(/^[0-9]{4}$/) // Adjust regex based on your country's format
+    .required()
+    .messages({ 'string.pattern.base': 'OTP is invalid' }),
 });
 
 const loginSchema = Joi.object<UserLogin>({
@@ -50,6 +67,24 @@ const loginSchema = Joi.object<UserLogin>({
     }),
   password: Joi.string().min(6).required(),
 });
+
+export const validateMobile = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { error, value } = verifyMobileSchema.validate(req.body, {
+    abortEarly: false,
+  });
+  if (error) {
+    res.status(400);
+    res.json({
+      message: error.details.map((err) => err.message),
+    });
+  } else {
+    next();
+  }
+};
 
 export const validateRegistration = async (
   req: Request,

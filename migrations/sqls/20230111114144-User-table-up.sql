@@ -17,3 +17,11 @@ CREATE TABLE Users_token(
     created_at timestamp
 );
 
+CREATE TABLE otp_temp(
+    id SERIAL PRIMARY KEY,
+    mobile VARCHAR NOT NULL,
+    otp VARCHAR NOT NULL,
+    valid_till timestamp
+);
+
+CREATE INDEX otp_check_idx ON otp_temp (mobile, otp, valid_till);

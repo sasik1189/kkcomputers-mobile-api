@@ -30,6 +30,28 @@ export class UserModel {
   //create a new user(register)
   // the method needs to be asynchronous because all calls to the database will be promises
 
+  async checkPhone(u: User): Promise<string | null> {
+    try {
+      //open connection with database
+      const connection = await client.connect();
+
+      const checkSql = 'SELECT * FROM users WHERE mobile = $1';
+
+      const checkResult = await connection.query(checkSql, [u.mobile]);
+
+      if (checkResult.rows.length) {
+        const checkResultValue = checkResult.rows[0];
+        if (checkResultValue.mobile === u.mobile) {
+          return `Mobile number already exists`;
+        }
+      }
+      connection.release();
+      return null;
+    } catch (error) {
+      throw new Error(`${error}`);
+    }
+  }
+
   async checkMailOrPhone(u: User): Promise<string> {
     try {
       //open connection with database
@@ -52,6 +74,43 @@ export class UserModel {
       connection.release();
       //return created user
       return '';
+    } catch (error) {
+      throw new Error(`${error}`);
+    }
+  }
+
+  async insertOtp(mobile: string, otp: string): Promise<string | null> {
+    try {
+      //open connection with database
+      const connection = await client.connect();
+
+      const checkSql =
+        "INSERT INTO otp_temp (mobile, otp, valid_till) VALUES ($1, $2, CURRENT_TIMESTAMP + '5 minutes')";
+
+      await connection.query(checkSql, [mobile, otp]);
+
+      connection.release();
+      return null;
+    } catch (error) {
+      throw new Error(`${error}`);
+    }
+  }
+
+  async checkOtp(mobile: string, otp: string): Promise<string | null> {
+    try {
+      //open connection with database
+      const connection = await client.connect();
+
+      const checkSql =
+        'SELECT * FROM otp_temp WHERE mobile = $1 and otp = $2 and valid_till >= CURRENT_TIMESTAMP';
+
+      const checkResult = await connection.query(checkSql, [mobile, otp]);
+
+      connection.release();
+      if (checkResult.rowCount === 0) {
+        return `OTP is invalid or expired`;
+      }
+      return null;
     } catch (error) {
       throw new Error(`${error}`);
     }

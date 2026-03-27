@@ -66,7 +66,7 @@ export class OrderModel {
   }
 
   async success(o: SuccessOrder): Promise<null> {
-    let isTransactionBegin: boolean = false;
+    let isTransactionBegin = false;
     try {
       //open connection with database
 
@@ -97,7 +97,7 @@ export class OrderModel {
               o.userId,
               subscriptionId,
               o.orderId,
-              subscriptionDays
+              subscriptionDays,
             ]);
           }
         }
@@ -129,11 +129,7 @@ export class OrderModel {
       const sql = `UPDATE orders set message = $2, status = $3, payment_received_at = now()
           where order_id = $1`;
       //run query
-      await connection.query(sql, [
-        o.orderId,
-        o.message,
-        'FAILED',
-      ]);
+      await connection.query(sql, [o.orderId, o.message, 'FAILED']);
 
       //release connection
       connection.release();
