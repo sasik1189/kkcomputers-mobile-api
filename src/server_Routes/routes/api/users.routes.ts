@@ -6,6 +6,7 @@ import {
   validateLogin,
   validateMobile,
   validateGoogleLogin,
+  validateEmail,
 } from '../../../middleware/validation';
 import rateLimit from 'express-rate-limit';
 
@@ -23,6 +24,13 @@ usersRoutes.post(
   loginSignupLimiter,
   validateMobile,
   controllers.verifyMobile
+);
+
+usersRoutes.post(
+  '/verify_email',
+  loginSignupLimiter,
+  validateEmail,
+  controllers.verifyEmail
 );
 
 //Once you create a new user, Store the token & use it for future HTTP requests

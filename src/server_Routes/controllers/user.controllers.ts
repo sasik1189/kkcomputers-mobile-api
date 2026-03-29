@@ -4,11 +4,20 @@ import jwt from 'jsonwebtoken';
 import config from '../../env_variables_config/config';
 import bcrypt from 'bcrypt';
 import { Twilio } from 'twilio';
+import nodemailer from 'nodemailer';
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 
-const twilioClient = new Twilio(accountSid, authToken);
+const transporter = nodemailer.createTransport({
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true,
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GOOGLE_APP_PASSWORD, // DO NOT use your regular password
+  },
+});
 
 //instance from the UserModel class
 const userModel = new UserModel();
@@ -32,6 +41,7 @@ export const verifyMobile = async (
         message: [checkPhone],
       });
     } else {
+      const twilioClient = new Twilio(accountSid, authToken);
       const randomFourDigit = getRandomFourDigitString();
       const message = await twilioClient.messages.create({
         body: `Your OTP is ${randomFourDigit} to verify your mobile - KK Computers `,
@@ -44,7 +54,49 @@ export const verifyMobile = async (
       await userModel.insertOtp(req.body.mobile, randomFourDigit);
 
       res.json({
-        data: { otp: randomFourDigit },
+        // data: { otp: randomFourDigit },
+        message: 'done.. sent OTP',
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500);
+    res.json({
+      message: String(error),
+    });
+  }
+};
+
+export const verifyEmail = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const checkEmail = await userModel.checkEmail(req.body.email);
+
+    if (checkEmail != null) {
+      res.status(400);
+      res.json({
+        message: [checkEmail],
+      });
+    } else {
+      const randomFourDigit = getRandomFourDigitString();
+      const mailOptions = {
+        from: process.env.GMAIL_USER,
+        to: req.body.email,
+        subject: 'Signup OTP - KK Computers',
+        text: `Your OTP is ${randomFourDigit} to verify your mobile - KK Computers`,
+        // html: `<b>Your OTP is ${randomFourDigit} to verify your mobile - KK Computers</b>`,
+      };
+
+      const info = await transporter.sendMail(mailOptions);
+      console.log('Email sent successfully! Message ID: ' + info.messageId);
+
+      await userModel.insertOtp(req.body.email, randomFourDigit);
+
+      res.json({
+        // data: { otp: randomFourDigit },
         message: 'done.. sent OTP',
       });
     }
@@ -72,7 +124,7 @@ export const create = async (
         message: [checkMailOrPhone],
       });
     } else {
-      const checkOtp = await userModel.checkOtp(req.body.mobile, req.body.otp);
+      const checkOtp = await userModel.checkOtp(req.body.email, req.body.otp);
       if (checkOtp) {
         res.status(400);
         res.json({

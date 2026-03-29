@@ -5,6 +5,10 @@ interface VerifyMobile {
   mobile: string;
 }
 
+interface VerifyEmail {
+  email: string;
+}
+
 interface UserRegistration {
   name: string;
   mobile: string;
@@ -31,6 +35,12 @@ const verifyMobileSchema = Joi.object<VerifyMobile>({
     .pattern(/^[0-9]{10}$/) // Adjust regex based on your country's format
     .required()
     .messages({ 'string.pattern.base': 'Mobile must be a valid phone number' }),
+});
+
+const verifyEmailSchema = Joi.object<VerifyEmail>({
+  email: Joi.string()
+    .email({ tlds: { allow:  false } })
+    .required(),
 });
 
 const registrationSchema = Joi.object<UserRegistration>({
@@ -89,6 +99,24 @@ const googleLoginSchema = Joi.object<GoogleLogin>({
       'any.required': 'Invalid request.',
     }),
 });
+
+export const validateEmail = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { error, value } = verifyEmailSchema.validate(req.body, {
+    abortEarly: false,
+  });
+  if (error) {
+    res.status(400);
+    res.json({
+      message: error.details.map((err) => err.message),
+    });
+  } else {
+    next();
+  }
+};
 
 export const validateMobile = async (
   req: Request,
