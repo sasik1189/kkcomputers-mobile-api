@@ -5,6 +5,7 @@ import {
   validateRegistration,
   validateLogin,
   validateMobile,
+  validateGoogleLogin,
 } from '../../../middleware/validation';
 import rateLimit from 'express-rate-limit';
 
@@ -44,5 +45,12 @@ usersRoutes.post(
 );
 //to delete a sepecific user, token required
 // usersRoutes.delete('/:id', verifyAuthToken, controllers.deleteUser);
+
+usersRoutes.post(
+  '/google_login',
+  loginSignupLimiter,
+  validateGoogleLogin,
+  controllers.googleAuthenticate
+);
 
 export default usersRoutes;

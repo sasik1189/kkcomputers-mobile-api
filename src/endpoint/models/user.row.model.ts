@@ -6,14 +6,15 @@ import { nanoid } from 'nanoid';
 /* CRUD actions for the User table */
 //define the Typescript type for user table
 export type User = {
-  id: number;
-  userId: string;
+  // id: number;
+  userId?: string;
   name: string;
   email: string;
-  mobile: string;
+  mobile?: string;
   password: string;
-  shopName: string;
-  token: string;
+  shopName?: string;
+  token?: string;
+  googleId?: string;
 };
 
 export type LoginUser = {
@@ -39,13 +40,33 @@ export class UserModel {
 
       const checkResult = await connection.query(checkSql, [u.mobile]);
 
+      connection.release();
+
       if (checkResult.rows.length) {
         const checkResultValue = checkResult.rows[0];
         if (checkResultValue.mobile === u.mobile) {
           return `Mobile number already exists`;
         }
       }
+      return null;
+    } catch (error) {
+      throw new Error(`${error}`);
+    }
+  }
+
+  async checkEmail(email: string): Promise<string | null> {
+    try {
+      const connection = await client.connect();
+
+      const checkSql = 'SELECT * FROM users WHERE email = $1';
+
+      const checkResult = await connection.query(checkSql, [email]);
+
       connection.release();
+
+      if (checkResult.rows.length) {
+        return `Email already exists`;
+      }
       return null;
     } catch (error) {
       throw new Error(`${error}`);
@@ -128,14 +149,17 @@ export class UserModel {
       if (checkResult.rows.length) {
         const checkResultValue = checkResult.rows[0];
         if (checkResultValue.email === u.email) {
+          connection.release();
           return `Email already exists`;
         }
         if (checkResultValue.mobile === u.mobile) {
+          connection.release();
           return `Mobile number already exists`;
         }
       }
       const userId: string = nanoid();
-      const sql = `INSERT INTO users (user_id, name, email, mobile, shop_name, password) VALUES($1, $2, $3, $4, $5, $6) RETURNING *`;
+      const sql = `INSERT INTO users (user_id, name, email, mobile, shop_name, password, google_id)
+          VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING *`;
       //hash password
       const hash = bcrypt.hashSync(
         (u.password + config.pepper) as string,
@@ -149,6 +173,7 @@ export class UserModel {
         u.mobile,
         u.shopName,
         hash,
+        u.googleId,
       ]);
       //release connection
       connection.release();

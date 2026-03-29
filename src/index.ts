@@ -16,12 +16,12 @@ const app: express.Application = express();
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   limit: 100, // Limit each IP to 100 requests per `window`
-  standardHeaders: 'draft-7', // set `RateLimit` headers
+  standardHeaders: 'draft-8', // set `RateLimit` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
   message: 'Too many requests, please try again later.',
   validate: { xForwardedForHeader: false },
 });
-app.set('trust proxy', true);
+app.set('trust proxy', 1);
 /* Middleware*/
 //HTTP request logger middleware
 app.use(morgan('common'));

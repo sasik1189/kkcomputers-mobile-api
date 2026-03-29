@@ -171,7 +171,7 @@ export const authenticate = async (
     );
     if (!user) {
       return res.status(401).json({
-        message: ['Email or mobile not not found. Please signup'],
+        message: ['Email or mobile not found. Please signup'],
       });
     }
     if (!user.password) {
@@ -207,6 +207,61 @@ export const authenticate = async (
         message: ['Incorrect password'],
       });
     }
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: String(error),
+    });
+  }
+};
+
+export const googleAuthenticate = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    if (!req.body.userId) {
+      return res.status(401).json({
+        message: ['Invalid authorization'],
+      });
+    }
+    const checkEmail = await userModel.checkEmail(req.body.email);
+    if (!checkEmail) {
+      const userData = {
+        name: req.body.name,
+        email: req.body.email,
+        password: getRandomFourDigitString(),
+        googleId: req.body.userId,
+      };
+      await userModel.create(userData);
+    }
+    const user = await userModel.authenticate(
+      req.body.email,
+      req.body.password
+    );
+    if (!user) {
+      return res.status(500).json({
+        message: ['Failed to login'],
+      });
+    }
+    delete user.password;
+    const time = new Date();
+    const token = jwt.sign(
+      { user, time: time.toISOString() },
+      `${config.tokenSecret}`
+    );
+
+    await userModel.saveLoginToken(user.userId, token);
+    return res.json({
+      data: {
+        userId: user.userId,
+        name: user.name,
+        shopName: user.shopName,
+        token: token,
+      },
+      message: 'login successfully',
+    });
   } catch (error) {
     console.log(error);
     return res.status(500).json({

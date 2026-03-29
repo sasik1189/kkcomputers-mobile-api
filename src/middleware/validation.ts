@@ -19,6 +19,13 @@ interface UserLogin {
   password: string;
 }
 
+interface GoogleLogin {
+  userId: string;
+  name: string;
+  email: string;
+  token: string;
+}
+
 const verifyMobileSchema = Joi.object<VerifyMobile>({
   mobile: Joi.string()
     .pattern(/^[0-9]{10}$/) // Adjust regex based on your country's format
@@ -68,6 +75,21 @@ const loginSchema = Joi.object<UserLogin>({
   password: Joi.string().min(6).required(),
 });
 
+const googleLoginSchema = Joi.object<GoogleLogin>({
+  name: Joi.string().required().messages({
+    'any.required': 'Invalid request.',
+  }),
+  userId: Joi.string().required().messages({
+    'any.required': 'Invalid request.',
+  }),
+  email: Joi.string()
+    .email({ tlds: { allow: false } })
+    .required()
+    .messages({
+      'any.required': 'Invalid request.',
+    }),
+});
+
 export const validateMobile = async (
   req: Request,
   res: Response,
@@ -110,6 +132,24 @@ export const validateLogin = async (
   next: NextFunction
 ) => {
   const { error, value } = loginSchema.validate(req.body, {
+    abortEarly: false,
+  });
+  if (error) {
+    res.status(400);
+    res.json({
+      message: error.details.map((err) => err.message),
+    });
+  } else {
+    next();
+  }
+};
+
+export const validateGoogleLogin = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { error, value } = googleLoginSchema.validate(req.body, {
     abortEarly: false,
   });
   if (error) {
